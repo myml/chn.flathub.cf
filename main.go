@@ -9,8 +9,11 @@ import (
 	"net/url"
 )
 
+const FlathubServer = "https://dl.flathub.org"
+const ProxyServer = "https://chn.flathub.cf"
+
 func server() {
-	server, _ := url.Parse("https://dl.flathub.org")
+	server, _ := url.Parse(FlathubServer)
 	proxy := httputil.NewSingleHostReverseProxy(server)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -44,24 +47,12 @@ func server() {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		data = bytes.Replace(data, []byte("https://dl.flathub.org/repo/"), []byte("http://localhost:18080/repo/"), 1)
+		data = bytes.Replace(data, []byte(FlathubServer+"/repo/"), []byte(ProxyServer+"/repo/"), 1)
 		w.Write(data)
 	})
-	log.Println(http.ListenAndServe(":18080", nil))
+	log.Panic(http.ListenAndServe(":18080", nil))
 }
 
-func summaryReplace(repo [30]byte) {
-}
 func main() {
 	server()
-	return
-	b, err := ioutil.ReadFile("./summary")
-	if err != nil {
-		log.Panic(err)
-	}
-	b = bytes.Replace(b, []byte("https://dl.flathub.org/repo/"), []byte("http://localhost:18080/repo/"), 1)
-	ioutil.WriteFile("/home/myml/.local/share/flatpak/repo/summary", b, 0655)
 }
-
-// https://dl.flathub.org/repo/
-// http://localhost:18080/repo/
